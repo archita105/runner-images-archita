@@ -69,6 +69,7 @@ if (-not $os.IsVenturaArm64) {
 }
 $packageManagement.AddToolVersion("Yarn", $(Get-YarnVersion))
 
+
 # Project Management
 $projectManagement = $installedSoftware.AddHeader("Project Management")
 $projectManagement.AddToolVersion("Apache Ant", $(Get-ApacheAntVersion))
@@ -98,6 +99,10 @@ $utilities.AddToolVersion("Unxip", $(Get-UnxipVersion))
 $utilities.AddToolVersion("yq", $(Get-YqVersion))
 $utilities.AddToolVersion("zstd", $(Get-ZstdVersion))
 $utilities.AddToolVersion("Ninja", $(Get-NinjaVersion))
+if ($os.IsVentura -or $os.IsSonoma -or $os.ISSequoia) {
+    $utilities.AddToolVersion("Vagrant", $(Get-VagrantVersion))
+    $utilities.AddToolVersion("VirtualBox", $(Get-VirtualBoxVersion))
+}
 
 # Tools
 $tools = $installedSoftware.AddHeader("Tools")
