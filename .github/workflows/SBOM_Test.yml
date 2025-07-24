@@ -1,0 +1,36 @@
+name: Local SBOM Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-sbom:
+    strategy:
+      matrix:
+        macos_version: [macos-13, macos-14-large, macos-15-large]
+    runs-on: ${{ matrix.macos_version }}
+    steps:
+      - name: Show runner version
+        run: |
+          echo "Running on macOS version: ${{ matrix.macos_version }}"
+          echo "Image version: $ImageVersion"
+
+      - name: Install SYFT v1.24.0
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v1.24.0
+        shell: bash
+
+      - name: Run SYFT to generate SBOM
+        run: |
+          sudo syft dir:/ -vv -o spdx-json=sbom.json --exclude ./Users --exclude ./System/Volumes --exclude ./private
+        shell: bash
+
+      - name: Compress SBOM file
+        run: |
+          zip sbom.json.zip sbom.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.macos_version }}
+          path: sbom.json.zip
