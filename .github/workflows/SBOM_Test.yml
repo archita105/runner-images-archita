@@ -7,7 +7,7 @@ jobs:
   generate-sbom:
     strategy:
       matrix:
-        macos_version: [macos-13, macos-14-large, macos-15-large]
+        macos_version: [macos-13]
     runs-on: ${{ matrix.macos_version }}
     steps:
       - name: Show runner version
