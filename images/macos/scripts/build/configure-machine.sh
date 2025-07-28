@@ -22,16 +22,27 @@ sudo defaults write /Library/Preferences/com.apple.keyboardtype "keyboardtype" -
 # Update VoiceOver Utility to allow VoiceOver to be controlled with AppleScript
 # by creating a special Accessibility DB file (SIP must be disabled) and
 # updating the user defaults system to reflect this change.
+DARWIN_VERSION=$(uname -r | cut -d '.' -f1)
 if csrutil status | grep -Eq  "System Integrity Protection status: (disabled|unknown)"; then
     sudo bash -c 'echo -n "a" > /private/var/db/Accessibility/.VoiceOverAppleScriptEnabled'
-fi
-defaults write com.apple.VoiceOver4/default SCREnableAppleScript -bool YES
+        # macOS 15 (Darwin 24) requires updating the new plist location
+ if [ "$DARWIN_VERSION" -eq 24 ]; then
+        PLIST_PATH="$HOME/Library/Group Containers/group.com.apple.VoiceOver/Library/Preferences/com.apple.VoiceOver4/default.plist"
 
-# https://developer.apple.com/support/expiration/
-# Enterprise iOS Distribution Certificates generated between February 7 and September 1st, 2020 will expire on February 7, 2023.
-# Rotate the certificate before expiration to ensure your apps are installed and signed with an active certificate.
-# Confirm that the correct intermediate certificate is installed by verifying the expiration date is set to 2030.
-# sudo security delete-certificate -Z FF6797793A3CD798DC5B2ABEF56F73EDC9F83A64 /Library/Keychains/System.keychain
+        if [ -f "$PLIST_PATH" ]; then
+            sudo plutil -replace SCREnableAppleScript -bool true "$PLIST_PATH"
+            echo "✅ VoiceOver AppleScript control enabled for macOS 15."
+        else
+            echo "⚠️ Warning: Plist file not found at $PLIST_PATH"
+        fi
+    else
+        # Use old method for macOS versions before 15
+        defaults write com.apple.VoiceOver4/default SCREnableAppleScript -bool YES
+    fi
+else
+    echo "❌ SIP is enabled. Please disable SIP before running this script."
+fi
+
 
 swiftc -suppress-warnings "${HOME}/image-generation/add-certificate.swift"
 
